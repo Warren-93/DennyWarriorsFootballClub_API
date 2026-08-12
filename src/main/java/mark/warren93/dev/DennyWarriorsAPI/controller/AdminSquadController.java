@@ -1,9 +1,11 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
 import mark.warren93.dev.DennyWarriorsAPI.model.Player;
 import mark.warren93.dev.DennyWarriorsAPI.service.SquadService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,6 +22,12 @@ public class AdminSquadController {
 
     public AdminSquadController(SquadService squadService) {
         this.squadService = squadService;
+    }
+
+    /** Raw model fields (not the public PlayerResponse aliases) — for the admin editor form. */
+    @GetMapping
+    public ApiListResponse<Player> getAllPlayers() {
+        return ApiListResponse.of(squadService.getSquad(null, null));
     }
 
     @PostMapping

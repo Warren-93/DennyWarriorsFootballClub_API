@@ -58,6 +58,9 @@ public class SquadService {
         existing.setAppearances(player.getAppearances());
         existing.setBio(player.getBio());
         existing.setCaptain(player.isCaptain());
+        existing.setSponsorLogo1(player.getSponsorLogo1());
+        existing.setSponsorLogo2(player.getSponsorLogo2());
+        existing.setSponsorLogo3(player.getSponsorLogo3());
         existing.setUpdatedAt(LocalDateTime.now());
         return playerRepository.save(existing);
     }

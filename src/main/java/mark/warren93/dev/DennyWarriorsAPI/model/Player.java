@@ -30,6 +30,12 @@ public class Player {
     private Integer appearances;
     private String bio;
     private boolean captain;
+    // Up to 3 general sponsor logos for this player's card — no fixed
+    // category (not "home/away/boot"), just optional slots that only
+    // render on the public card when populated.
+    private String sponsorLogo1;
+    private String sponsorLogo2;
+    private String sponsorLogo3;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
