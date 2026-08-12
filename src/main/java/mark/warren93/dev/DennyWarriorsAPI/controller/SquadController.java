@@ -1,7 +1,7 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
 import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
-import mark.warren93.dev.DennyWarriorsAPI.model.Player;
+import mark.warren93.dev.DennyWarriorsAPI.dto.PlayerResponse;
 import mark.warren93.dev.DennyWarriorsAPI.service.SquadService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,14 +20,17 @@ public class SquadController {
     }
 
     @GetMapping
-    public ApiListResponse<Player> getSquad(
+    public ApiListResponse<PlayerResponse> getSquad(
             @RequestParam(required = false) Integer limit,
             @RequestParam(required = false) String position) {
-        return ApiListResponse.of(squadService.getSquad(limit, position));
+        var players = squadService.getSquad(limit, position).stream()
+                .map(PlayerResponse::from)
+                .toList();
+        return ApiListResponse.of(players);
     }
 
     @GetMapping("/{id}")
-    public Player getPlayerById(@PathVariable String id) {
-        return squadService.getPlayerById(id);
+    public PlayerResponse getPlayerById(@PathVariable String id) {
+        return PlayerResponse.from(squadService.getPlayerById(id));
     }
 }

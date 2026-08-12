@@ -1,9 +1,11 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
 import mark.warren93.dev.DennyWarriorsAPI.model.NewsArticle;
 import mark.warren93.dev.DennyWarriorsAPI.service.NewsService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -20,6 +22,12 @@ public class AdminNewsController {
 
     public AdminNewsController(NewsService newsService) {
         this.newsService = newsService;
+    }
+
+    /** Unlike the public listing, this sees drafts too — for the admin's own editor list. */
+    @GetMapping
+    public ApiListResponse<NewsArticle> getAllArticles() {
+        return ApiListResponse.of(newsService.getNews(null, null, null));
     }
 
     @PostMapping

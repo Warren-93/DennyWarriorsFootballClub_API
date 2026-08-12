@@ -49,6 +49,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/standings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/history/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/media/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/stats/**").permitAll()
 
                         // Sync log viewing — any authenticated admin-panel role.
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin/sync/logs").hasAnyRole("SUPER_ADMIN", "EDITOR", "VIEWER")

@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
@@ -20,18 +21,30 @@ public class FixtureService {
         this.fixtureRepository = fixtureRepository;
     }
 
-    public List<Fixture> getFixtures(String season, String competition, String status) {
+    public List<Fixture> getFixtures(String season, String competition, String status, Integer limit) {
         Stream<Fixture> stream = fixtureRepository.findAll().stream()
                 .filter(fixture -> isBlank(season) || equalsIgnoreCase(fixture.getSeason(), season))
                 .filter(fixture -> isBlank(competition) || equalsIgnoreCase(fixture.getCompetition(), competition))
                 .filter(fixture -> matchesStatus(fixture, status))
-                .sorted(Comparator.comparing(Fixture::getKickoffAt, Comparator.nullsLast(Comparator.naturalOrder())));
+                .sorted(statusOrderedComparator(status));
+
+        if (limit != null && limit > 0) {
+            stream = stream.limit(limit);
+        }
         return stream.toList();
     }
 
     public Fixture getFixtureById(String id) {
         return fixtureRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Fixture not found: " + id));
+    }
+
+    /** The single earliest not-yet-played fixture, if any. */
+    public Optional<Fixture> getNextFixture() {
+        Instant now = Instant.now();
+        return fixtureRepository.findAll().stream()
+                .filter(fixture -> fixture.getKickoffAt() != null && fixture.getKickoffAt().isAfter(now))
+                .min(Comparator.comparing(Fixture::getKickoffAt));
     }
 
     /**
@@ -52,6 +65,13 @@ public class FixtureService {
             return fixture.getKickoffAt() != null && !fixture.getKickoffAt().isAfter(Instant.now());
         }
         return equalsIgnoreCase(fixture.getStatus(), status);
+    }
+
+    /** "past"/results reads most-recent-first; everything else stays chronological. */
+    private Comparator<Fixture> statusOrderedComparator(String status) {
+        Comparator<Fixture> chronological =
+                Comparator.comparing(Fixture::getKickoffAt, Comparator.nullsLast(Comparator.naturalOrder()));
+        return "past".equals(normalise(status)) ? chronological.reversed() : chronological;
     }
 
     private boolean isBlank(String value) {
