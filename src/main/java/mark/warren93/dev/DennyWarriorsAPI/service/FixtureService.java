@@ -48,6 +48,32 @@ public class FixtureService {
     }
 
     /**
+     * Distinct seasons present in the synced fixtures, newest first — lets the
+     * frontend populate a season filter without hardcoding season strings.
+     * Each new season comes from a new Comet report URL (COMET_FIXTURES_URL),
+     * but old seasons' fixtures stay in Mongo (upserted, never deleted), so
+     * this naturally grows as the club moves through seasons.
+     */
+    public List<String> getSeasons() {
+        return fixtureRepository.findAll().stream()
+                .map(Fixture::getSeason)
+                .filter(season -> season != null && !season.isBlank())
+                .distinct()
+                .sorted(Comparator.reverseOrder())
+                .toList();
+    }
+
+    /** Distinct competition names present in the synced fixtures, alphabetical. */
+    public List<String> getCompetitions() {
+        return fixtureRepository.findAll().stream()
+                .map(Fixture::getCompetition)
+                .filter(competition -> competition != null && !competition.isBlank())
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    /**
      * "status" accepts the spec's semantic "upcoming"/"past" (judged by
      * kickoff time, since that's independent of whatever status vocabulary
      * Comet happens to use), or an exact match against the raw league status

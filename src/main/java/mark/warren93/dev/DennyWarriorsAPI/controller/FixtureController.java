@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/fixtures")
 public class FixtureController {
@@ -33,6 +35,16 @@ public class FixtureController {
                 .map(fixture -> FixtureResponse.from(fixture, clubConfig.getName()))
                 .toList();
         return ApiListResponse.of(fixtures);
+    }
+
+    @GetMapping("/seasons")
+    public List<String> getSeasons() {
+        return fixtureService.getSeasons();
+    }
+
+    @GetMapping("/competitions")
+    public List<String> getCompetitions() {
+        return fixtureService.getCompetitions();
     }
 
     @GetMapping("/next")
