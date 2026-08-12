@@ -7,20 +7,18 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "league_table")
-public class LeagueTable {
+@Document(collection = "media_assets")
+public class MediaAsset {
 
     @Id
     private String id;
-    private String key;
-    private String leagueName;
-    private String season;
-    private List<LeagueTableRow> rows = new ArrayList<>();
-    private LocalDateTime updatedAt;
+    private String filename;
+    private String contentType;
+    private long size;
+    private byte[] data;
+    private LocalDateTime uploadedAt;
 }

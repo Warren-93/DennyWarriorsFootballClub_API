@@ -5,8 +5,7 @@ import mark.warren93.dev.DennyWarriorsAPI.model.Fixture;
 import mark.warren93.dev.DennyWarriorsAPI.repository.FixtureRepository;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -21,17 +20,12 @@ public class FixtureService {
         this.fixtureRepository = fixtureRepository;
     }
 
-    public List<Fixture> getFixtures(Integer limit, String competition, String season, Boolean played) {
+    public List<Fixture> getFixtures(String season, String competition, String status) {
         Stream<Fixture> stream = fixtureRepository.findAll().stream()
-                .filter(fixture -> isBlank(competition) || equalsIgnoreCase(fixture.getCompetition(), competition))
                 .filter(fixture -> isBlank(season) || equalsIgnoreCase(fixture.getSeason(), season))
-                .filter(fixture -> played == null || fixture.isPlayed() == played)
-                .sorted(Comparator.comparing(Fixture::getFixtureDate, Comparator.nullsLast(LocalDate::compareTo)));
-
-        if (limit != null && limit > 0) {
-            stream = stream.limit(limit);
-        }
-
+                .filter(fixture -> isBlank(competition) || equalsIgnoreCase(fixture.getCompetition(), competition))
+                .filter(fixture -> matchesStatus(fixture, status))
+                .sorted(Comparator.comparing(Fixture::getKickoffAt, Comparator.nullsLast(Comparator.naturalOrder())));
         return stream.toList();
     }
 
@@ -40,46 +34,24 @@ public class FixtureService {
                 .orElseThrow(() -> new ResourceNotFoundException("Fixture not found: " + id));
     }
 
-    public Fixture getNextFixture() {
-        return fixtureRepository.findAll().stream()
-                .filter(fixture -> !fixture.isPlayed())
-                .filter(fixture -> fixture.getFixtureDate() == null || !fixture.getFixtureDate().isBefore(LocalDate.now()))
-                .sorted(Comparator.comparing(Fixture::getFixtureDate, Comparator.nullsLast(LocalDate::compareTo)))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("No upcoming fixture found"));
-    }
-
-    public Fixture createFixture(Fixture fixture) {
-        LocalDateTime now = LocalDateTime.now();
-        fixture.setId(null);
-        fixture.setCreatedAt(now);
-        fixture.setUpdatedAt(now);
-        if (isBlank(fixture.getStatus())) {
-            fixture.setStatus("scheduled");
+    /**
+     * "status" accepts the spec's semantic "upcoming"/"past" (judged by
+     * kickoff time, since that's independent of whatever status vocabulary
+     * Comet happens to use), or an exact match against the raw league status
+     * (e.g. "PLAYED", "SCHEDULED") for callers that want that instead.
+     */
+    private boolean matchesStatus(Fixture fixture, String status) {
+        if (isBlank(status)) {
+            return true;
         }
-        return fixtureRepository.save(fixture);
-    }
-
-    public Fixture updateFixture(String id, Fixture fixture) {
-        Fixture existing = getFixtureById(id);
-        existing.setOpponent(fixture.getOpponent());
-        existing.setCompetition(fixture.getCompetition());
-        existing.setSeason(fixture.getSeason());
-        existing.setVenue(fixture.getVenue());
-        existing.setFixtureDate(fixture.getFixtureDate());
-        existing.setKickoffTime(fixture.getKickoffTime());
-        existing.setHome(fixture.isHome());
-        existing.setPlayed(fixture.isPlayed());
-        existing.setStatus(fixture.getStatus());
-        existing.setNotes(fixture.getNotes());
-        existing.setTicketUrl(fixture.getTicketUrl());
-        existing.setUpdatedAt(LocalDateTime.now());
-        return fixtureRepository.save(existing);
-    }
-
-    public void deleteFixture(String id) {
-        Fixture existing = getFixtureById(id);
-        fixtureRepository.delete(existing);
+        String normalised = normalise(status);
+        if ("upcoming".equals(normalised)) {
+            return fixture.getKickoffAt() != null && fixture.getKickoffAt().isAfter(Instant.now());
+        }
+        if ("past".equals(normalised)) {
+            return fixture.getKickoffAt() != null && !fixture.getKickoffAt().isAfter(Instant.now());
+        }
+        return equalsIgnoreCase(fixture.getStatus(), status);
     }
 
     private boolean isBlank(String value) {

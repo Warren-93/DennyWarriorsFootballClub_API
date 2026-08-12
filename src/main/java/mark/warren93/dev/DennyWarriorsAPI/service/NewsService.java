@@ -40,6 +40,11 @@ public class NewsService {
                 .orElseThrow(() -> new ResourceNotFoundException("Article not found: " + id));
     }
 
+    public NewsArticle getArticleBySlug(String slug) {
+        return newsArticleRepository.findBySlug(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Article not found: " + slug));
+    }
+
     public NewsArticle createArticle(NewsArticle article) {
         LocalDateTime now = LocalDateTime.now();
         article.setId(null);

@@ -6,8 +6,9 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -17,17 +18,29 @@ public class Fixture {
 
     @Id
     private String id;
-    private String opponent;
+    private String leagueFixtureId;
     private String competition;
     private String season;
+    private String homeTeam;
+    private String awayTeam;
+    private Instant kickoffAt;
     private String venue;
-    private LocalDate fixtureDate;
-    private String kickoffTime;
-    private boolean home;
-    private boolean played;
+    /** Passed through as-is from the league API — not a hard enum, its vocabulary isn't fully known. */
     private String status;
-    private String notes;
-    private String ticketUrl;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Integer homeScore;
+    private Integer awayScore;
+    private List<MatchEvent> matchEvents = new ArrayList<>();
+    private Instant lastSyncedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class MatchEvent {
+        private Integer minute;
+        private String type;
+        private String player;
+        private String detail;
+    }
 }

@@ -1,35 +1,34 @@
 package mark.warren93.dev.DennyWarriorsAPI.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Document(collection = "results")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MatchResult {
 
-    @Id
-    private String id;
-    private String fixtureId;
-    private String opponent;
-    private String competition;
+    private Long matchId;
+    private String matchDescription;
+    private String matchStatus;
+    private String liveStatus;
+    private Long matchDate;
+    private Integer round;
+    private Integer matchNumber;
+    private String name;           // Competition name
+    private String competitionType;
     private String season;
-    private String venue;
-    private LocalDate matchDate;
-    private int dennyWarriorsScore;
-    private int opponentScore;
-    private List<String> scorers = new ArrayList<>();
-    private String report;
-    private boolean home;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Long homeTeam;
+    private Long awayTeam;
+    private String homeTeamStatus;
+    private String awayTeamStatus;
+    private String facility;
+    private String facilityPlaceName;
+    private String country;
+    private String resultSupplement; // e.g. "Ineligible players forced forfeit"
+    private String gender;
+    private String category;
 }

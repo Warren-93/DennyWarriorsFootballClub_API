@@ -29,12 +29,10 @@ public class SquadService {
         if (limit != null && limit > 0) {
             stream = stream.limit(limit);
         }
-        System.out.println("Getting Squad " + stream);
         return stream.toList();
     }
 
     public Player getPlayerById(String id) {
-        System.out.println("Getting player ");
         return playerRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Player not found: " + id));
     }
 

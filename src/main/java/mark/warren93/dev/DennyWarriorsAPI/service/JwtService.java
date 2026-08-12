@@ -28,22 +28,36 @@ public class JwtService {
     private static final Base64.Encoder B64_URL = Base64.getUrlEncoder().withoutPadding();
     private static final Base64.Decoder B64_URL_DECODER = Base64.getUrlDecoder();
 
+    private static final String TYPE_ACCESS = "access";
+    private static final String TYPE_REFRESH = "refresh";
+
     private final byte[] secretBytes;
     private final long expirationMs;
+    private final long refreshExpirationMs;
     private final String issuer;
 
     public JwtService(
             @Value("${dwfc.jwt.secret}") String secret,
             @Value("${dwfc.jwt.expiration-ms}") long expirationMs,
+            @Value("${dwfc.jwt.refresh-expiration-ms}") long refreshExpirationMs,
             @Value("${dwfc.jwt.issuer}") String issuer) {
         this.secretBytes = secret.getBytes(StandardCharsets.UTF_8);
         this.expirationMs = expirationMs;
+        this.refreshExpirationMs = refreshExpirationMs;
         this.issuer = issuer;
     }
 
-    public String generateToken(String username, boolean admin) {
+    public String generateAccessToken(String username, String role) {
+        return generateToken(username, role, TYPE_ACCESS, expirationMs);
+    }
+
+    public String generateRefreshToken(String username, String role) {
+        return generateToken(username, role, TYPE_REFRESH, refreshExpirationMs);
+    }
+
+    private String generateToken(String username, String role, String type, long ttlMs) {
         long nowSeconds = Instant.now().getEpochSecond();
-        long expSeconds = nowSeconds + (expirationMs / 1000);
+        long expSeconds = nowSeconds + (ttlMs / 1000);
 
         Map<String, Object> header = new LinkedHashMap<>();
         header.put("alg", "HS256");
@@ -52,7 +66,8 @@ public class JwtService {
         Map<String, Object> claims = new LinkedHashMap<>();
         claims.put("iss", issuer);
         claims.put("sub", username);
-        claims.put("admin", admin);
+        claims.put("role", role);
+        claims.put("type", type);
         claims.put("iat", nowSeconds);
         claims.put("exp", expSeconds);
 
@@ -99,6 +114,18 @@ public class JwtService {
             throw new InvalidTokenException("Token expired");
         }
 
+        return claims;
+    }
+
+    /**
+     * Parses a token and verifies it's a refresh token (not an access token
+     * presented where a refresh token is expected, or vice versa).
+     */
+    public Map<String, Object> parseRefreshToken(String token) {
+        Map<String, Object> claims = parse(token);
+        if (!TYPE_REFRESH.equals(claims.get("type"))) {
+            throw new InvalidTokenException("Not a refresh token");
+        }
         return claims;
     }
 
@@ -151,7 +178,7 @@ public class JwtService {
 
     /**
      * Thrown when a presented token cannot be trusted — bad signature,
-     * malformed shape, wrong issuer, or expired.
+     * malformed shape, wrong issuer, wrong type, or expired.
      */
     public static class InvalidTokenException extends RuntimeException {
         public InvalidTokenException(String message) {

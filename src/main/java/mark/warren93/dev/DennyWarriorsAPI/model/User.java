@@ -17,7 +17,5 @@ public class User {
     private Integer userId;
     private String userName;
     private String password;
-    private boolean admin;
-    private boolean manager;
-    private boolean player;
+    private Role role;
 }

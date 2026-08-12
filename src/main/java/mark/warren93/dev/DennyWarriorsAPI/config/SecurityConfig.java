@@ -38,20 +38,30 @@ public class SecurityConfig {
                         // Always allow CORS preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Auth endpoint is open
-                        .requestMatchers("/auth/**").permitAll()
+                        // Auth endpoints are open
+                        .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers("/actuator/health/**").permitAll()
 
-                        // Public read endpoints — anyone can browse the site
-                        .requestMatchers(HttpMethod.GET, "/fixtures/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/results/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/squad/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/news/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/league/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/stats/**").permitAll()
+                        // Public read endpoints — anyone can browse the site.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/squad/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/news/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/fixtures/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/standings/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/history/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/media/**").permitAll()
 
-                        // Everything else (POST/PUT/DELETE) requires admin role
-                        .anyRequest().hasRole("ADMIN"))
+                        // Sync log viewing — any authenticated admin-panel role.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/admin/sync/logs").hasAnyRole("SUPER_ADMIN", "EDITOR", "VIEWER")
+
+                        // User management is super-admin only.
+                        .requestMatchers("/api/v1/admin/users/**").hasRole("SUPER_ADMIN")
+
+                        // All other admin/write actions (squad/news CRUD, manual sync trigger,
+                        // and anything added in later phases) require SUPER_ADMIN or EDITOR.
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("SUPER_ADMIN", "EDITOR")
+
+                        // Default deny — anything unmatched needs at least a valid token.
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

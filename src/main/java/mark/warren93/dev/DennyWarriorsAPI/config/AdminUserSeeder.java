@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.config;
 
+import mark.warren93.dev.DennyWarriorsAPI.model.Role;
 import mark.warren93.dev.DennyWarriorsAPI.model.User;
 import mark.warren93.dev.DennyWarriorsAPI.repository.UserRepository;
 import org.slf4j.Logger;
@@ -46,9 +47,7 @@ public class AdminUserSeeder implements CommandLineRunner {
         User admin = new User();
         admin.setUserName(username);
         admin.setPassword(passwordEncoder.encode(password));
-        admin.setAdmin(true);
-        admin.setManager(false);
-        admin.setPlayer(false);
+        admin.setRole(Role.SUPER_ADMIN);
         userRepository.save(admin);
 
         log.info("Seeded initial admin user '{}' (change the password before going live!).", username);

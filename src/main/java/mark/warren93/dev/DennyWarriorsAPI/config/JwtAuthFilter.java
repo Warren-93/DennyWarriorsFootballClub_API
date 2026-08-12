@@ -48,12 +48,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             Map<String, Object> claims = jwtService.parse(token);
+            if (!"access".equals(claims.get("type"))) {
+                // Refresh tokens must never authenticate a request — only /auth/refresh accepts them.
+                filterChain.doFilter(request, response);
+                return;
+            }
             String username = String.valueOf(claims.get("sub"));
-            boolean admin = Boolean.TRUE.equals(claims.get("admin"));
+            String role = String.valueOf(claims.get("role"));
 
-            List<SimpleGrantedAuthority> authorities = admin
-                    ? List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
-                    : List.of(new SimpleGrantedAuthority("ROLE_USER"));
+            List<SimpleGrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
             UsernamePasswordAuthenticationToken auth =
                     new UsernamePasswordAuthenticationToken(username, null, authorities);
