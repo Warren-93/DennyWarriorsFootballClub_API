@@ -6,7 +6,10 @@ import mark.warren93.dev.DennyWarriorsAPI.dto.CreateUserRequest;
 import mark.warren93.dev.DennyWarriorsAPI.dto.UserSummary;
 import mark.warren93.dev.DennyWarriorsAPI.service.UserService;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,5 +35,11 @@ public class AdminUserController {
     @ResponseStatus(HttpStatus.CREATED)
     public UserSummary createUser(@Valid @RequestBody CreateUserRequest request) {
         return userService.createUser(request);
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable String id, Authentication authentication) {
+        userService.deleteUser(id, authentication.getName());
     }
 }

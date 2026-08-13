@@ -63,6 +63,11 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
     }
 
+    @ExceptionHandler(InvalidUserOperationException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidUserOperation(InvalidUserOperationException exception, HttpServletRequest request) {
+        return body(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException exception, HttpServletRequest request) {
         String message = exception.getBindingResult().getFieldErrors().stream()
