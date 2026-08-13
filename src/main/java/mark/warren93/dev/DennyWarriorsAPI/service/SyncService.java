@@ -39,7 +39,9 @@ public class SyncService {
     private static final Logger log = LoggerFactory.getLogger(SyncService.class);
     private static final int MAX_ATTEMPTS = 3;
     private static final long BACKOFF_BASE_MS = 500;
-    private static final long MIN_INTERVAL_MS = 60_000; // 1 minute — floor to avoid hammering Comet
+    // League data (fixtures/tables) only changes weekly, so 1 day is the floor — no
+    // reason to poll Comet more often than that.
+    private static final long MIN_INTERVAL_MS = 24L * 60 * 60 * 1000;
 
     public static final String TRIGGER_SCHEDULED = "SCHEDULED";
     public static final String TRIGGER_MANUAL = "MANUAL";
@@ -94,7 +96,7 @@ public class SyncService {
     public SyncSettings updateIntervalMs(long intervalMs) {
         if (intervalMs < MIN_INTERVAL_MS) {
             throw new InvalidSyncSettingsException(
-                    "Sync interval must be at least " + (MIN_INTERVAL_MS / 60_000) + " minute(s)");
+                    "Sync interval must be at least " + (MIN_INTERVAL_MS / 86_400_000) + " day(s)");
         }
 
         SyncSettings settings = syncSettingsRepository.findById(SyncSettings.SINGLETON_ID)

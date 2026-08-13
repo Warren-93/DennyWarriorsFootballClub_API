@@ -47,7 +47,7 @@ public class AdminSyncController {
 
     @PutMapping("/settings")
     public SyncSettingsResponse updateSettings(@RequestBody UpdateSyncSettingsRequest request) {
-        long intervalMs = request.intervalMinutes() * 60_000;
+        long intervalMs = request.intervalDays() * 86_400_000L;
         return SyncSettingsResponse.of(syncService.updateIntervalMs(intervalMs).getIntervalMs());
     }
 }
