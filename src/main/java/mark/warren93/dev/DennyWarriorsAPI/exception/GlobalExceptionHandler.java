@@ -58,6 +58,11 @@ public class GlobalExceptionHandler {
         return body(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
     }
 
+    @ExceptionHandler(InvalidSyncSettingsException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidSyncSettings(InvalidSyncSettingsException exception, HttpServletRequest request) {
+        return body(HttpStatus.BAD_REQUEST, exception.getMessage(), request);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException exception, HttpServletRequest request) {
         String message = exception.getBindingResult().getFieldErrors().stream()

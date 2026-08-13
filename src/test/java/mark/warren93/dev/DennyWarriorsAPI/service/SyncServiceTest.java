@@ -7,12 +7,14 @@ import mark.warren93.dev.DennyWarriorsAPI.model.SyncLog;
 import mark.warren93.dev.DennyWarriorsAPI.repository.FixtureRepository;
 import mark.warren93.dev.DennyWarriorsAPI.repository.StandingsRowRepository;
 import mark.warren93.dev.DennyWarriorsAPI.repository.SyncLogRepository;
+import mark.warren93.dev.DennyWarriorsAPI.repository.SyncSettingsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.scheduling.TaskScheduler;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,13 +37,18 @@ class SyncServiceTest {
     private StandingsRowRepository standingsRowRepository;
     @Mock
     private SyncLogRepository syncLogRepository;
+    @Mock
+    private SyncSettingsRepository syncSettingsRepository;
+    @Mock
+    private TaskScheduler taskScheduler;
 
     private SyncService syncService;
 
     @BeforeEach
     void setUp() {
         syncService = new SyncService(
-                leagueApiClient, new LeagueDataMapper(), fixtureRepository, standingsRowRepository, syncLogRepository);
+                leagueApiClient, new LeagueDataMapper(), fixtureRepository, standingsRowRepository,
+                syncLogRepository, syncSettingsRepository, taskScheduler);
         when(syncLogRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
     }
 

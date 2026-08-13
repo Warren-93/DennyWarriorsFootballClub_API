@@ -1,11 +1,15 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
 import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
+import mark.warren93.dev.DennyWarriorsAPI.dto.SyncSettingsResponse;
+import mark.warren93.dev.DennyWarriorsAPI.dto.UpdateSyncSettingsRequest;
 import mark.warren93.dev.DennyWarriorsAPI.model.SyncLog;
 import mark.warren93.dev.DennyWarriorsAPI.repository.SyncLogRepository;
 import mark.warren93.dev.DennyWarriorsAPI.service.SyncService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,5 +38,16 @@ public class AdminSyncController {
                 .sorted(Comparator.comparing(SyncLog::getStartedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
         return ApiListResponse.of(logs);
+    }
+
+    @GetMapping("/settings")
+    public SyncSettingsResponse getSettings() {
+        return SyncSettingsResponse.of(syncService.getIntervalMs());
+    }
+
+    @PutMapping("/settings")
+    public SyncSettingsResponse updateSettings(@RequestBody UpdateSyncSettingsRequest request) {
+        long intervalMs = request.intervalMinutes() * 60_000;
+        return SyncSettingsResponse.of(syncService.updateIntervalMs(intervalMs).getIntervalMs());
     }
 }

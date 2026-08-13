@@ -1,25 +1,37 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import jakarta.annotation.PostConstruct;
+import mark.warren93.dev.DennyWarriorsAPI.exception.InvalidSyncSettingsException;
 import mark.warren93.dev.DennyWarriorsAPI.model.Fixture;
 import mark.warren93.dev.DennyWarriorsAPI.model.MatchResult;
 import mark.warren93.dev.DennyWarriorsAPI.model.StandingsRow;
 import mark.warren93.dev.DennyWarriorsAPI.model.SyncLog;
+import mark.warren93.dev.DennyWarriorsAPI.model.SyncSettings;
 import mark.warren93.dev.DennyWarriorsAPI.repository.FixtureRepository;
 import mark.warren93.dev.DennyWarriorsAPI.repository.StandingsRowRepository;
 import mark.warren93.dev.DennyWarriorsAPI.repository.SyncLogRepository;
+import mark.warren93.dev.DennyWarriorsAPI.repository.SyncSettingsRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.Trigger;
+import org.springframework.scheduling.TriggerContext;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Pulls fixtures + standings from the league API on a schedule (or on
  * demand) and upserts them into MongoDB. The public API only ever reads
  * from MongoDB — this is the one place that talks to Comet.
+ *
+ * The scheduled interval is stored in Mongo (SyncSettings) rather than
+ * fixed via a Spring @Scheduled property, so it can be changed live from
+ * the admin panel — the next run's own Trigger re-reads the current value,
+ * no restart needed.
  */
 @Service
 public class SyncService {
@@ -27,6 +39,7 @@ public class SyncService {
     private static final Logger log = LoggerFactory.getLogger(SyncService.class);
     private static final int MAX_ATTEMPTS = 3;
     private static final long BACKOFF_BASE_MS = 500;
+    private static final long MIN_INTERVAL_MS = 60_000; // 1 minute — floor to avoid hammering Comet
 
     public static final String TRIGGER_SCHEDULED = "SCHEDULED";
     public static final String TRIGGER_MANUAL = "MANUAL";
@@ -36,31 +49,85 @@ public class SyncService {
     private final FixtureRepository fixtureRepository;
     private final StandingsRowRepository standingsRowRepository;
     private final SyncLogRepository syncLogRepository;
+    private final SyncSettingsRepository syncSettingsRepository;
+    private final TaskScheduler taskScheduler;
+
+    private final AtomicLong currentIntervalMs = new AtomicLong();
 
     @Value("${league.sync.enabled:true}")
     private boolean syncEnabled;
+
+    @Value("${league.sync.initial-delay-ms:10000}")
+    private long initialDelayMs;
+
+    @Value("${league.sync.interval-ms:900000}")
+    private long defaultIntervalMs;
 
     public SyncService(
             LeagueApiClient leagueApiClient,
             LeagueDataMapper mapper,
             FixtureRepository fixtureRepository,
             StandingsRowRepository standingsRowRepository,
-            SyncLogRepository syncLogRepository) {
+            SyncLogRepository syncLogRepository,
+            SyncSettingsRepository syncSettingsRepository,
+            TaskScheduler taskScheduler) {
         this.leagueApiClient = leagueApiClient;
         this.mapper = mapper;
         this.fixtureRepository = fixtureRepository;
         this.standingsRowRepository = standingsRowRepository;
         this.syncLogRepository = syncLogRepository;
+        this.syncSettingsRepository = syncSettingsRepository;
+        this.taskScheduler = taskScheduler;
     }
 
-    @Scheduled(
-            initialDelayString = "${league.sync.initial-delay-ms:10000}",
-            fixedDelayString = "${league.sync.interval-ms:900000}")
+    @PostConstruct
+    void init() {
+        SyncSettings settings = syncSettingsRepository.findById(SyncSettings.SINGLETON_ID).orElse(null);
+        currentIntervalMs.set(settings != null ? settings.getIntervalMs() : defaultIntervalMs);
+        taskScheduler.schedule(this::runScheduledSync, new DynamicIntervalTrigger());
+    }
+
+    public long getIntervalMs() {
+        return currentIntervalMs.get();
+    }
+
+    public SyncSettings updateIntervalMs(long intervalMs) {
+        if (intervalMs < MIN_INTERVAL_MS) {
+            throw new InvalidSyncSettingsException(
+                    "Sync interval must be at least " + (MIN_INTERVAL_MS / 60_000) + " minute(s)");
+        }
+
+        SyncSettings settings = syncSettingsRepository.findById(SyncSettings.SINGLETON_ID)
+                .orElseGet(() -> {
+                    SyncSettings fresh = new SyncSettings();
+                    fresh.setId(SyncSettings.SINGLETON_ID);
+                    return fresh;
+                });
+        settings.setIntervalMs(intervalMs);
+        settings.setUpdatedAt(Instant.now());
+        settings = syncSettingsRepository.save(settings);
+
+        currentIntervalMs.set(intervalMs);
+        return settings;
+    }
+
     public void runScheduledSync() {
         if (!syncEnabled) {
             return;
         }
         sync(TRIGGER_SCHEDULED);
+    }
+
+    /** Reads the current interval fresh on every scheduling decision, so changes take effect on the next run. */
+    private final class DynamicIntervalTrigger implements Trigger {
+        @Override
+        public Instant nextExecution(TriggerContext triggerContext) {
+            Instant lastCompletion = triggerContext.lastCompletion();
+            if (lastCompletion == null) {
+                return Instant.now().plusMillis(initialDelayMs);
+            }
+            return lastCompletion.plusMillis(currentIntervalMs.get());
+        }
     }
 
     public SyncLog sync(String trigger) {
