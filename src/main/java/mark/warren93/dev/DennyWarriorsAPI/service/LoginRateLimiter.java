@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -16,9 +17,17 @@ public class LoginRateLimiter {
     private static final int MAX_ATTEMPTS = 5;
     private static final long WINDOW_SECONDS = 300; // 5 minutes
 
+    private final boolean enabled;
     private final ConcurrentHashMap<String, Window> attemptsByUsername = new ConcurrentHashMap<>();
 
+    public LoginRateLimiter(
+            @Value("${dwfc.security.login-rate-limit.enabled:true}") boolean enabled) {
+        this.enabled = enabled;
+    }
+
     public void checkAllowed(String username) {
+        if (!enabled) return;
+
         Window window = attemptsByUsername.get(normalise(username));
         if (window == null) {
             return;
@@ -33,6 +42,8 @@ public class LoginRateLimiter {
     }
 
     public void recordFailure(String username) {
+        if (!enabled) return;
+
         attemptsByUsername.compute(normalise(username), (key, existing) -> {
             if (existing == null || existing.isExpired()) {
                 return new Window(Instant.now(), 1);
