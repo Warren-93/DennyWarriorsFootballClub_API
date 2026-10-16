@@ -1,0 +1,9 @@
+# Findings in old commits that are already public. They can't be removed
+# without rewriting history, so the scan skips them. The credentials they
+# point to must be rotated (see the pull request that added this file).
+4c55cf864372bc198e36ea33f7d9fb5affb8cef7:src/main/resources/application.properties:url-api-key-parameter:63
+4c55cf864372bc198e36ea33f7d9fb5affb8cef7:src/main/resources/application.properties:url-api-key-parameter:64
+4d680b454bcaef47abd75d50787ac50036fb3081:src/main/resources/application.properties:connection-string-with-password:12
+4d680b454bcaef47abd75d50787ac50036fb3081:src/main/resources/application.properties:connection-string-with-password:14
+ca28e92290649bc7c351417ead3fd15a34b5a233:src/main/resources/application.properties:spring-property-secret-default:15
+ca28e92290649bc7c351417ead3fd15a34b5a233:src/main/resources/application.properties:spring-property-secret-default:25

@@ -31,6 +31,9 @@ public class JwtService {
     private static final String TYPE_ACCESS = "access";
     private static final String TYPE_REFRESH = "refresh";
 
+    // HS256 needs a key of at least 256 bits.
+    private static final int MIN_SECRET_BYTES = 32;
+
     private final byte[] secretBytes;
     private final long expirationMs;
     private final long refreshExpirationMs;
@@ -41,6 +44,10 @@ public class JwtService {
             @Value("${dwfc.jwt.expiration-ms}") long expirationMs,
             @Value("${dwfc.jwt.refresh-expiration-ms}") long refreshExpirationMs,
             @Value("${dwfc.jwt.issuer}") String issuer) {
+        if (secret == null || secret.getBytes(StandardCharsets.UTF_8).length < MIN_SECRET_BYTES) {
+            throw new IllegalStateException(
+                    "DWFC_JWT_SECRET must be set to at least " + MIN_SECRET_BYTES + " characters");
+        }
         this.secretBytes = secret.getBytes(StandardCharsets.UTF_8);
         this.expirationMs = expirationMs;
         this.refreshExpirationMs = refreshExpirationMs;
