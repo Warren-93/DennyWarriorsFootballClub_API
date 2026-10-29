@@ -65,7 +65,7 @@ public class StatsService {
 
         int points = (won * 3) + drawn;
         Integer leaguePosition = standingsRowRepository.findAll().stream()
-                .filter(row -> clubName != null && clubName.equalsIgnoreCase(row.getClub()))
+                .filter(row -> clubConfig.isClub(row.getClubId(), row.getClub()))
                 .map(StandingsRow::getPosition)
                 .findFirst()
                 .orElse(null);
