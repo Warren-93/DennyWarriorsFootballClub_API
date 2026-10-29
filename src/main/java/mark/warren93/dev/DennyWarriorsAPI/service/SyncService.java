@@ -1,6 +1,7 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
 import jakarta.annotation.PostConstruct;
+import mark.warren93.dev.DennyWarriorsAPI.config.ClubConfig;
 import mark.warren93.dev.DennyWarriorsAPI.exception.InvalidSyncSettingsException;
 import mark.warren93.dev.DennyWarriorsAPI.model.Fixture;
 import mark.warren93.dev.DennyWarriorsAPI.model.MatchResult;
@@ -19,8 +20,15 @@ import org.springframework.scheduling.Trigger;
 import org.springframework.scheduling.TriggerContext;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -42,6 +50,10 @@ public class SyncService {
     // League data (fixtures/tables) only changes weekly, so 1 day is the floor — no
     // reason to poll Comet more often than that.
     private static final long MIN_INTERVAL_MS = 24L * 60 * 60 * 1000;
+    // A fixtures report whose newest match is older than this is almost
+    // certainly still pointing at a finished season.
+    private static final Duration STALE_FIXTURES_AFTER = Duration.ofDays(60);
+    private static final String COMPETITION_ACTIVE = "ACTIVE";
 
     public static final String TRIGGER_SCHEDULED = "SCHEDULED";
     public static final String TRIGGER_MANUAL = "MANUAL";
@@ -53,6 +65,7 @@ public class SyncService {
     private final SyncLogRepository syncLogRepository;
     private final SyncSettingsRepository syncSettingsRepository;
     private final TaskScheduler taskScheduler;
+    private final ClubConfig clubConfig;
 
     private final AtomicLong currentIntervalMs = new AtomicLong();
 
@@ -72,7 +85,8 @@ public class SyncService {
             StandingsRowRepository standingsRowRepository,
             SyncLogRepository syncLogRepository,
             SyncSettingsRepository syncSettingsRepository,
-            TaskScheduler taskScheduler) {
+            TaskScheduler taskScheduler,
+            ClubConfig clubConfig) {
         this.leagueApiClient = leagueApiClient;
         this.mapper = mapper;
         this.fixtureRepository = fixtureRepository;
@@ -80,12 +94,17 @@ public class SyncService {
         this.syncLogRepository = syncLogRepository;
         this.syncSettingsRepository = syncSettingsRepository;
         this.taskScheduler = taskScheduler;
+        this.clubConfig = clubConfig;
     }
 
     @PostConstruct
     void init() {
         SyncSettings settings = syncSettingsRepository.findById(SyncSettings.SINGLETON_ID).orElse(null);
-        currentIntervalMs.set(settings != null ? settings.getIntervalMs() : defaultIntervalMs);
+        // The settings document can exist without an interval (e.g. created by
+        // saving Comet links first), so treat 0 as "not set" too.
+        currentIntervalMs.set(settings != null && settings.getIntervalMs() > 0
+                ? settings.getIntervalMs()
+                : defaultIntervalMs);
         taskScheduler.schedule(this::runScheduledSync, new DynamicIntervalTrigger());
     }
 
@@ -99,12 +118,7 @@ public class SyncService {
                     "Sync interval must be at least " + (MIN_INTERVAL_MS / 86_400_000) + " day(s)");
         }
 
-        SyncSettings settings = syncSettingsRepository.findById(SyncSettings.SINGLETON_ID)
-                .orElseGet(() -> {
-                    SyncSettings fresh = new SyncSettings();
-                    fresh.setId(SyncSettings.SINGLETON_ID);
-                    return fresh;
-                });
+        SyncSettings settings = syncSettingsRepository.loadOrCreate();
         settings.setIntervalMs(intervalMs);
         settings.setUpdatedAt(Instant.now());
         settings = syncSettingsRepository.save(settings);
@@ -140,9 +154,10 @@ public class SyncService {
         try {
             List<MatchResult> matches = withRetry("fetchMatches", leagueApiClient::fetchMatches);
             int upserted = upsertFixtures(matches);
+            checkFixturesAreCurrent(matches, syncLog.getWarnings());
 
             List<StandingsRow> standings = withRetry("fetchStandings", leagueApiClient::fetchStandings);
-            replaceStandings(standings);
+            replaceStandings(selectClubTable(standings, syncLog.getWarnings()));
 
             syncLog.setStatus("SUCCESS");
             syncLog.setRecordsProcessed(matches.size());
@@ -150,8 +165,9 @@ public class SyncService {
         } catch (Exception ex) {
             log.error("League sync failed (trigger={})", trigger, ex);
             syncLog.setStatus("FAILED");
-            syncLog.setErrorMessage(ex.getMessage());
+            syncLog.setErrorMessage(redactApiKey(ex.getMessage()));
         }
+        syncLog.getWarnings().forEach(warning -> log.warn("League sync warning: {}", warning));
 
         syncLog.setFinishedAt(Instant.now());
         return syncLogRepository.save(syncLog);
@@ -170,6 +186,87 @@ public class SyncService {
             upserted++;
         }
         return upserted;
+    }
+
+    /**
+     * Each new season is a new Comet competition, and a fixtures report saved
+     * against last season's competition keeps "working" — it just stops
+     * returning anything new. Flag that so someone fetches a new link.
+     */
+    private void checkFixturesAreCurrent(List<MatchResult> matches, List<String> warnings) {
+        if (matches.isEmpty()) {
+            warnings.add("The Comet fixtures report returned no matches. If a new season has started, "
+                    + "paste the new fixtures link under Comet report links.");
+            return;
+        }
+        Long newest = matches.stream()
+                .map(MatchResult::getMatchDate)
+                .filter(Objects::nonNull)
+                .max(Long::compare)
+                .orElse(null);
+        if (newest != null && Instant.ofEpochMilli(newest).isBefore(Instant.now().minus(STALE_FIXTURES_AFTER))) {
+            LocalDate newestDate = Instant.ofEpochMilli(newest).atZone(ZoneOffset.UTC).toLocalDate();
+            warnings.add("The newest match in the Comet fixtures report is from " + newestDate
+                    + ", so it is probably still last season's report. Paste the new fixtures link under "
+                    + "Comet report links.");
+        }
+    }
+
+    /**
+     * Picks the one league table to show. A report filtered on competition
+     * type + status (rather than one fixed competition) rolls over by itself
+     * each season, but can return several divisions' tables at once — keep
+     * the one the club is in, preferring a competition that is still ACTIVE.
+     */
+    List<StandingsRow> selectClubTable(List<StandingsRow> rows, List<String> warnings) {
+        if (rows.isEmpty()) {
+            return rows;
+        }
+        Map<Long, List<StandingsRow>> byCompetition = new LinkedHashMap<>();
+        for (StandingsRow row : rows) {
+            byCompetition.computeIfAbsent(Objects.requireNonNullElse(row.getCompetitionId(), 0L), id -> new ArrayList<>())
+                    .add(row);
+        }
+
+        List<List<StandingsRow>> withClub = byCompetition.values().stream()
+                .filter(table -> table.stream().anyMatch(row -> clubConfig.isClub(row.getClubId(), row.getClub())))
+                .toList();
+        List<List<StandingsRow>> candidates = withClub.isEmpty() ? List.copyOf(byCompetition.values()) : withClub;
+        List<StandingsRow> chosen = candidates.stream()
+                .filter(SyncService::isActive)
+                .findFirst()
+                .orElse(candidates.get(0));
+
+        String competition = describeCompetition(chosen.get(0));
+        if (withClub.isEmpty()) {
+            warnings.add("The club wasn't found in the " + competition + " table. Check DWFC_CLUB_COMET_ID and "
+                    + "DWFC_CLUB_NAME match how Comet lists the club.");
+        }
+        if (byCompetition.size() > 1) {
+            warnings.add("The Comet standings report returned " + byCompetition.size()
+                    + " competitions; showing " + competition + ".");
+        }
+        if (chosen.get(0).getStatus() != null && !isActive(chosen)) {
+            warnings.add(competition + " has finished in Comet, so the league table is that season's final table. "
+                    + "Once the new season's league is set up, paste its standings link under Comet report links.");
+        }
+        return chosen;
+    }
+
+    private static boolean isActive(List<StandingsRow> table) {
+        return table.stream().anyMatch(row -> COMPETITION_ACTIVE.equalsIgnoreCase(row.getStatus()));
+    }
+
+    private static String describeCompetition(StandingsRow row) {
+        if (row.getCompetition() == null) {
+            return "the league";
+        }
+        return row.getSeason() == null ? row.getCompetition() : row.getCompetition() + " (" + row.getSeason() + ")";
+    }
+
+    /** WebClient errors can include the request URL, and with it the Comet API key. */
+    static String redactApiKey(String message) {
+        return message == null ? null : message.replaceAll("API_KEY=[^&\\s]+", "API_KEY=<redacted>");
     }
 
     private void replaceStandings(List<StandingsRow> standings) {

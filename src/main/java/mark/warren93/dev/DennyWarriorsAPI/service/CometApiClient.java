@@ -1,7 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
 import lombok.RequiredArgsConstructor;
-import mark.warren93.dev.DennyWarriorsAPI.config.CometApiConfig;
 import mark.warren93.dev.DennyWarriorsAPI.model.MatchResult;
 import mark.warren93.dev.DennyWarriorsAPI.model.StandingsRow;
 import org.springframework.http.HttpStatusCode;
@@ -22,28 +21,16 @@ import java.util.List;
 public class CometApiClient implements LeagueApiClient {
 
     private final WebClient webClient;
-    private final CometApiConfig config;
+    private final CometLinkService cometLinkService;
 
     private static Mono<? extends Throwable> cometError(String body) {
         return Mono.error(new RuntimeException("Comet API error: " + body));
     }
 
-    /**
-     * The report URLs carry an API key, so they only come from environment
-     * variables. Fail the sync (not the whole API) with a clear message when
-     * one is missing, so it shows up in the admin panel's sync log.
-     */
-    private static String requireUrl(String url, String envVar) {
-        if (url == null || url.isBlank() || url.contains("${")) {
-            throw new IllegalStateException(envVar + " is not set");
-        }
-        return url;
-    }
-
     @Override
     public List<MatchResult> fetchMatches() {
         MatchesResponse response = webClient.get()
-                .uri(requireUrl(config.getFixturesUrl(), "COMET_FIXTURES_URL"))
+                .uri(cometLinkService.resolve(CometLinkService.Report.FIXTURES))
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, resp ->
                         resp.bodyToMono(String.class).flatMap(CometApiClient::cometError))
@@ -55,7 +42,7 @@ public class CometApiClient implements LeagueApiClient {
     @Override
     public List<StandingsRow> fetchStandings() {
         StandingsResponse response = webClient.get()
-                .uri(requireUrl(config.getStandingsUrl(), "COMET_STANDINGS_URL"))
+                .uri(cometLinkService.resolve(CometLinkService.Report.STANDINGS))
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, resp ->
                         resp.bodyToMono(String.class).flatMap(CometApiClient::cometError))

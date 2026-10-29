@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.dto;
 
+import mark.warren93.dev.DennyWarriorsAPI.config.ClubConfig;
 import mark.warren93.dev.DennyWarriorsAPI.model.StandingsRow;
 
 public record LeagueTableRowResponse(
@@ -13,9 +14,11 @@ public record LeagueTableRowResponse(
         Integer ga,
         Integer gd,
         Integer points,
-        boolean isClub) {
+        boolean isClub,
+        String competition,
+        String season) {
 
-    public static LeagueTableRowResponse from(StandingsRow row, String clubName) {
+    public static LeagueTableRowResponse from(StandingsRow row, ClubConfig club) {
         return new LeagueTableRowResponse(
                 row.getPosition(),
                 row.getClub(),
@@ -27,6 +30,8 @@ public record LeagueTableRowResponse(
                 row.getGoalsAgainst(),
                 row.getGoalDifference(),
                 row.getPoints(),
-                clubName != null && clubName.equalsIgnoreCase(row.getClub()));
+                club.isClub(row.getClubId(), row.getClub()),
+                row.getCompetition(),
+                row.getSeason());
     }
 }

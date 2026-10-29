@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.dto;
 
+import mark.warren93.dev.DennyWarriorsAPI.config.ClubConfig;
 import mark.warren93.dev.DennyWarriorsAPI.model.Fixture;
 
 import java.time.Instant;
@@ -22,7 +23,7 @@ public record FixtureResponse(
         List<Fixture.MatchEvent> matchEvents,
         Instant lastSyncedAt,
         // Club-relative convenience fields for the single-club frontend —
-        // derived from the neutral home/away data above using dwfc.club.name.
+        // derived from the neutral home/away data above using ClubConfig.
         String opponent,
         Boolean home,
         Integer goalsFor,
@@ -33,9 +34,9 @@ public record FixtureResponse(
     private static final ZoneId KICKOFF_ZONE = ZoneId.of("Europe/London");
     private static final DateTimeFormatter TIME_FORMAT = DateTimeFormatter.ofPattern("HH:mm");
 
-    public static FixtureResponse from(Fixture fixture, String clubName) {
-        boolean isHome = clubName != null && clubName.equalsIgnoreCase(fixture.getHomeTeam());
-        boolean isAway = clubName != null && clubName.equalsIgnoreCase(fixture.getAwayTeam());
+    public static FixtureResponse from(Fixture fixture, ClubConfig club) {
+        boolean isHome = club.isHomeTeam(fixture);
+        boolean isAway = club.isAwayTeam(fixture);
 
         String opponent = isHome ? fixture.getAwayTeam() : isAway ? fixture.getHomeTeam() : null;
         Boolean home = (isHome || isAway) ? isHome : null;

@@ -27,7 +27,7 @@ public class StandingsController {
     public ApiListResponse<LeagueTableRowResponse> getStandings() {
         var rows = standingsRowRepository.findAll().stream()
                 .sorted(Comparator.comparing(StandingsRow::getPosition, Comparator.nullsLast(Integer::compareTo)))
-                .map(row -> LeagueTableRowResponse.from(row, clubConfig.getName()))
+                .map(row -> LeagueTableRowResponse.from(row, clubConfig))
                 .toList();
         return ApiListResponse.of(rows);
     }

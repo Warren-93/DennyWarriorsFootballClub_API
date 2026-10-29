@@ -10,8 +10,8 @@ import java.time.Instant;
 
 /**
  * Singleton document (fixed id) holding the live-adjustable league sync
- * interval, so it survives restarts and can be changed from the admin panel
- * without a redeploy.
+ * settings — the interval and the Comet report links — so they survive
+ * restarts and can be changed from the admin panel without a redeploy.
  */
 @Data
 @NoArgsConstructor
@@ -24,5 +24,14 @@ public class SyncSettings {
     @Id
     private String id;
     private long intervalMs;
+
+    /**
+     * Comet report links pasted in the admin panel. Each one carries an
+     * API_KEY, so they are never returned by the API (see CometLinkService).
+     * Null means "fall back to the COMET_*_URL environment variable".
+     */
+    private String cometFixturesUrl;
+    private String cometStandingsUrl;
+
     private Instant updatedAt;
 }

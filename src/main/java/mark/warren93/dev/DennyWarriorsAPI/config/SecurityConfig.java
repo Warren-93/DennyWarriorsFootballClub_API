@@ -57,6 +57,10 @@ public class SecurityConfig {
                         // User management is super-admin only.
                         .requestMatchers("/api/v1/admin/users/**").hasRole("SUPER_ADMIN")
 
+                        // Comet report links carry the API key and decide where league
+                        // data comes from, so only super-admins can see or change them.
+                        .requestMatchers("/api/v1/admin/sync/comet-links").hasRole("SUPER_ADMIN")
+
                         // All other admin/write actions (squad/news CRUD, manual sync trigger,
                         // and anything added in later phases) require SUPER_ADMIN or EDITOR.
                         .requestMatchers("/api/v1/admin/**").hasAnyRole("SUPER_ADMIN", "EDITOR")

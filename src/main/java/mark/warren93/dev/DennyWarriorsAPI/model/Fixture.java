@@ -23,6 +23,10 @@ public class Fixture {
     private String season;
     private String homeTeam;
     private String awayTeam;
+    // Comet's homeTeam/awayTeam columns: club ids, the same id space as the
+    // standings report's clubId, so the club is found even after a rename.
+    private Long homeTeamId;
+    private Long awayTeamId;
     private Instant kickoffAt;
     private String venue;
     /** Passed through as-is from the league API — not a hard enum, its vocabulary isn't fully known. */

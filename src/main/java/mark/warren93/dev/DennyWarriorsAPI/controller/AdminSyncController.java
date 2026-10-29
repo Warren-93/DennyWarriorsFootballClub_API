@@ -1,10 +1,13 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
 import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
+import mark.warren93.dev.DennyWarriorsAPI.dto.CometLinksResponse;
 import mark.warren93.dev.DennyWarriorsAPI.dto.SyncSettingsResponse;
+import mark.warren93.dev.DennyWarriorsAPI.dto.UpdateCometLinksRequest;
 import mark.warren93.dev.DennyWarriorsAPI.dto.UpdateSyncSettingsRequest;
 import mark.warren93.dev.DennyWarriorsAPI.model.SyncLog;
 import mark.warren93.dev.DennyWarriorsAPI.repository.SyncLogRepository;
+import mark.warren93.dev.DennyWarriorsAPI.service.CometLinkService;
 import mark.warren93.dev.DennyWarriorsAPI.service.SyncService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,10 +24,15 @@ public class AdminSyncController {
 
     private final SyncService syncService;
     private final SyncLogRepository syncLogRepository;
+    private final CometLinkService cometLinkService;
 
-    public AdminSyncController(SyncService syncService, SyncLogRepository syncLogRepository) {
+    public AdminSyncController(
+            SyncService syncService,
+            SyncLogRepository syncLogRepository,
+            CometLinkService cometLinkService) {
         this.syncService = syncService;
         this.syncLogRepository = syncLogRepository;
+        this.cometLinkService = cometLinkService;
     }
 
     @PostMapping("/trigger")
@@ -49,5 +57,16 @@ public class AdminSyncController {
     public SyncSettingsResponse updateSettings(@RequestBody UpdateSyncSettingsRequest request) {
         long intervalMs = request.intervalDays() * 86_400_000L;
         return SyncSettingsResponse.of(syncService.updateIntervalMs(intervalMs).getIntervalMs());
+    }
+
+    /** Where each Comet link comes from — never the link itself, which carries the API key. */
+    @GetMapping("/comet-links")
+    public CometLinksResponse getCometLinks() {
+        return cometLinkService.describe();
+    }
+
+    @PutMapping("/comet-links")
+    public CometLinksResponse updateCometLinks(@RequestBody UpdateCometLinksRequest request) {
+        return cometLinkService.update(request);
     }
 }

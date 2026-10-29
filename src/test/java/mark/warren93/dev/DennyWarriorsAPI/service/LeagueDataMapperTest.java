@@ -20,6 +20,8 @@ class LeagueDataMapperTest {
         match.setSeason("2025/2026");
         match.setName("Appin Warriors Premier League 25/26");
         match.setFacility("Ochilview Park");
+        match.setHomeTeam(185523L);
+        match.setAwayTeam(176912L);
         match.setMatchDate(1755442800000L);
         return match;
     }
@@ -35,6 +37,8 @@ class LeagueDataMapperTest {
         assertThat(fixture.getLeagueFixtureId()).isEqualTo("42");
         assertThat(fixture.getCompetition()).isEqualTo("Appin Warriors Premier League 25/26");
         assertThat(fixture.getStatus()).isEqualTo("PLAYED");
+        assertThat(fixture.getHomeTeamId()).isEqualTo(185523L);
+        assertThat(fixture.getAwayTeamId()).isEqualTo(176912L);
     }
 
     @Test

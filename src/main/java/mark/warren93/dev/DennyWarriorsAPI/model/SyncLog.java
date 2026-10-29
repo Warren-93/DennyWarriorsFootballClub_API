@@ -7,6 +7,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -22,5 +24,8 @@ public class SyncLog {
     private int recordsProcessed;
     private int recordsUpserted;
     private String errorMessage;
+    // Problems that didn't fail the sync but need a person, e.g. the Comet
+    // report still pointing at last season's finished competition.
+    private List<String> warnings = new ArrayList<>();
     private String trigger; // SCHEDULED | MANUAL
 }
