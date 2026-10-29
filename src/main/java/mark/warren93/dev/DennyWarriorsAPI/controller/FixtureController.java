@@ -32,7 +32,7 @@ public class FixtureController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Integer limit) {
         var fixtures = fixtureService.getFixtures(season, competition, status, limit).stream()
-                .map(fixture -> FixtureResponse.from(fixture, clubConfig.getName()))
+                .map(fixture -> FixtureResponse.from(fixture, clubConfig))
                 .toList();
         return ApiListResponse.of(fixtures);
     }
@@ -50,12 +50,12 @@ public class FixtureController {
     @GetMapping("/next")
     public ResponseEntity<FixtureResponse> getNextFixture() {
         return fixtureService.getNextFixture()
-                .map(fixture -> ResponseEntity.ok(FixtureResponse.from(fixture, clubConfig.getName())))
+                .map(fixture -> ResponseEntity.ok(FixtureResponse.from(fixture, clubConfig)))
                 .orElseGet(() -> ResponseEntity.noContent().build());
     }
 
     @GetMapping("/{id}")
     public FixtureResponse getFixtureById(@PathVariable String id) {
-        return FixtureResponse.from(fixtureService.getFixtureById(id), clubConfig.getName());
+        return FixtureResponse.from(fixtureService.getFixtureById(id), clubConfig);
     }
 }

@@ -29,6 +29,8 @@ public class LeagueDataMapper {
         fixture.setLeagueFixtureId(String.valueOf(match.getMatchId()));
         fixture.setCompetition(match.getName());
         fixture.setSeason(match.getSeason());
+        fixture.setHomeTeamId(match.getHomeTeam());
+        fixture.setAwayTeamId(match.getAwayTeam());
         fixture.setKickoffAt(match.getMatchDate() != null ? Instant.ofEpochMilli(match.getMatchDate()) : null);
         fixture.setVenue(match.getFacility());
         fixture.setStatus(match.getMatchStatus());

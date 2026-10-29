@@ -35,15 +35,14 @@ public class StatsService {
     }
 
     public SeasonStatsResponse getSeasonStats() {
-        String clubName = clubConfig.getName();
         List<Fixture> allFixtures = fixtureRepository.findAll();
 
         String season = inferCurrentSeason(allFixtures).orElse(null);
 
         List<Fixture> seasonResults = allFixtures.stream()
                 .filter(f -> season == null || Objects.equals(normalise(f.getSeason()), normalise(season)))
-                .filter(f -> isClubFixture(f, clubName))
-                .filter(f -> clubGoalsFor(f, clubName) != null && clubGoalsAgainst(f, clubName) != null)
+                .filter(this::isClubFixture)
+                .filter(f -> clubGoalsFor(f) != null && clubGoalsAgainst(f) != null)
                 .toList();
 
         int played = seasonResults.size();
@@ -54,8 +53,8 @@ public class StatsService {
         int goalsAgainst = 0;
 
         for (Fixture f : seasonResults) {
-            int gf = clubGoalsFor(f, clubName);
-            int ga = clubGoalsAgainst(f, clubName);
+            int gf = clubGoalsFor(f);
+            int ga = clubGoalsAgainst(f);
             goalsFor += gf;
             goalsAgainst += ga;
             if (gf > ga) won++;
@@ -73,20 +72,19 @@ public class StatsService {
         return new SeasonStatsResponse(season, played, won, drawn, lost, goalsFor, goalsAgainst, points, leaguePosition);
     }
 
-    private boolean isClubFixture(Fixture fixture, String clubName) {
-        return clubName != null
-                && (clubName.equalsIgnoreCase(fixture.getHomeTeam()) || clubName.equalsIgnoreCase(fixture.getAwayTeam()));
+    private boolean isClubFixture(Fixture fixture) {
+        return clubConfig.isHomeTeam(fixture) || clubConfig.isAwayTeam(fixture);
     }
 
-    private Integer clubGoalsFor(Fixture fixture, String clubName) {
-        if (clubName.equalsIgnoreCase(fixture.getHomeTeam())) return fixture.getHomeScore();
-        if (clubName.equalsIgnoreCase(fixture.getAwayTeam())) return fixture.getAwayScore();
+    private Integer clubGoalsFor(Fixture fixture) {
+        if (clubConfig.isHomeTeam(fixture)) return fixture.getHomeScore();
+        if (clubConfig.isAwayTeam(fixture)) return fixture.getAwayScore();
         return null;
     }
 
-    private Integer clubGoalsAgainst(Fixture fixture, String clubName) {
-        if (clubName.equalsIgnoreCase(fixture.getHomeTeam())) return fixture.getAwayScore();
-        if (clubName.equalsIgnoreCase(fixture.getAwayTeam())) return fixture.getHomeScore();
+    private Integer clubGoalsAgainst(Fixture fixture) {
+        if (clubConfig.isHomeTeam(fixture)) return fixture.getAwayScore();
+        if (clubConfig.isAwayTeam(fixture)) return fixture.getHomeScore();
         return null;
     }
 

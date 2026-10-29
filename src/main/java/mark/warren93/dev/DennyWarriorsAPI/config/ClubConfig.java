@@ -1,6 +1,7 @@
 package mark.warren93.dev.DennyWarriorsAPI.config;
 
 import lombok.Data;
+import mark.warren93.dev.DennyWarriorsAPI.model.Fixture;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -18,14 +19,22 @@ public class ClubConfig {
     private String name;
 
     /**
-     * The club's Comet club id (the standings report's clubId column). Unlike
-     * the name it survives a rename, so standings prefer it when it's set.
-     * Fixtures only carry team names, so they still match on {@link #name}.
+     * The club's Comet club id (the standings report's clubId column, and the
+     * fixtures report's homeTeam/awayTeam). Unlike the name it survives a
+     * rename, so matching prefers it whenever the data carries an id.
      */
     private Long cometClubId;
 
     public boolean isClubName(String candidate) {
         return name != null && candidate != null && name.trim().equalsIgnoreCase(candidate.trim());
+    }
+
+    public boolean isHomeTeam(Fixture fixture) {
+        return isClub(fixture.getHomeTeamId(), fixture.getHomeTeam());
+    }
+
+    public boolean isAwayTeam(Fixture fixture) {
+        return isClub(fixture.getAwayTeamId(), fixture.getAwayTeam());
     }
 
     public boolean isClub(Long candidateClubId, String candidateName) {
