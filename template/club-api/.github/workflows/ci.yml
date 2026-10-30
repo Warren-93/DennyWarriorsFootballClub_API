@@ -1,0 +1,22 @@
+name: CI
+
+# Takes effect once this template is the root of its own repository.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      # No MongoDB service needed: the suite never touches the database.
+      - run: ./mvnw -B verify

@@ -1,0 +1,56 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+
+### Local Maven cache — never commit downloaded dependencies ###
+.m2/
+
+### Secrets and local config — never commit these ###
+# Real values live in the hosting platform's environment settings. See .env.example
+# for the list of variables (it has names only, no real values).
+.env
+.env.*
+!.env.example
+*.env
+src/main/resources/application-local.properties
+src/main/resources/application-*.local.properties
+src/main/resources/application-secrets.properties
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+credentials*.json
+service-account*.json

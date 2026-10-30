@@ -1,0 +1,27 @@
+# Local development: MongoDB plus the API.
+#
+#   cp .env.example .env    # then fill in JWT_SECRET and ADMIN_PASSWORD
+#   docker compose up --build
+#
+# The API is then on http://localhost:8080 and the frontend template
+# (club-web) can point VITE_API_URL at http://localhost:8080/api/v1.
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  api:
+    build: .
+    depends_on:
+      - mongo
+    ports:
+      - "8080:8080"
+    env_file: .env
+    environment:
+      MONGODB_URI: mongodb://mongo:27017/club
+
+volumes:
+  mongo-data:
