@@ -6,13 +6,13 @@ extracted from the Denny Warriors FC site. It has two halves, one per repository
 | Part | Lives in | Stack |
 |---|---|---|
 | **club-api** | `DennyWarriorsFootballClub_API/template/club-api` | Java 17, Spring Boot 3.5, MongoDB |
-| **club-web** | `DennyWarriorsFootballClub_Website-pages/template/club-web` | React 18, Vite |
+| **club-web** | `DennyWarriorsFootballClub/template/club-web` | React 18, Vite (Vercel-ready) |
 
 Each folder is self-contained and is meant to become the root of a new
 repository for a new club. Each has its own README, tests and CI workflow.
 
 ```
- Static host (Netlify, Pages...)          Container host (Render, Fly...)        MongoDB Atlas
+ Static host (Vercel, Netlify...)          Container host (Render, Fly...)        MongoDB Atlas
  ┌──────────────────────────┐   HTTPS    ┌────────────────────────────┐        ┌───────────┐
  │ club-web                 │ ─────────► │ club-api  /api/v1/...      │ ─────► │ fixtures  │
  │  club.config.js = brand  │  JSON+JWT  │  CLUB_NAME, LEAGUE_PROVIDER│        │ news ...  │
@@ -27,7 +27,7 @@ repository for a new club. Each has its own README, tests and CI workflow.
 ```bash
 # 1. Copy each half into its own new repository
 cp -r DennyWarriorsFootballClub_API/template/club-api            my-club-api
-cp -r DennyWarriorsFootballClub_Website-pages/template/club-web  my-club-web
+cp -r DennyWarriorsFootballClub/template/club-web                my-club-web
 
 # 2. Backend: rename the package, configure, run
 cd my-club-api && ./scripts/init-club.sh org.myclub.api my-club-api
@@ -37,7 +37,7 @@ docker compose up --build
 # 3. Frontend: brand it, run
 cd ../my-club-web && npm install
 #    edit src/config/club.config.js and replace public/badge.svg
-npm run dev
+npm run dev            # http://localhost:3000
 ```
 
 What changes per club is **configuration, not code**:
@@ -52,8 +52,9 @@ What changes per club is **configuration, not code**:
 
 - **New content type** (sponsors, staff, documents): copy the API's
   `history/` package, then add one entry to the web app's
-  `admin/resources.js`. Security works by path convention, so no security
-  change is needed.
+  `admin/resources.js`. That gives you a dashboard tab, and one hook call
+  (`useResourceEditor`) adds in-place editing on the public page. Security
+  works by path convention, so no security change is needed.
 - **New league data source:** implement `LeagueDataProvider` (two methods).
   Scheduling, retries, upserts and the admin sync screen already exist.
 - **Other sports:** positions, column labels, player stats and league
@@ -66,24 +67,38 @@ The template keeps the original's architecture and its strongest pieces
 `LeagueApiClient` seam, config-driven admin CRUD, the sync service with
 retries and logs). These issues were fixed on the way:
 
-**Frontend and API contract**
-- The website and API had drifted apart. The site called
-  `/api/dennywarriors/results`, `/league/table` and admin writes such as
-  `POST /fixtures` that the API doesn't have, and it read list responses
-  as arrays although the API wraps them in `{ data, ... }`. The template
-  ships both halves against one documented contract, with tests on each side.
-- The login page showed a hard-coded dev password, accepted any pasted JWT,
-  and had a localhost-only login bypass (`warriors123`). All removed.
-- Tokens were never refreshed: the 24h token simply expired. The client now
-  refreshes on 401, sharing one refresh across concurrent requests.
-- "Read more" buttons did nothing. Articles now have their own page,
-  rendered as text (no HTML injection).
+**Frontend** (`DennyWarriorsFootballClub`)
+
+The template keeps this site's design (squad cards, history timeline, media
+page with a live player, article pages) and its in-place editing for staff,
+and fixes these:
+
+- The login page accepted any pasted JWT. It now takes a username and
+  password only.
+- The refresh token returned at login was thrown away, so admins were
+  silently logged out once the 24h token expired: the admin route only
+  checked that *a* token existed. The client now refreshes on 401, sharing
+  one refresh across concurrent requests, and signs out cleanly if that
+  fails.
+- Errors showed the API's raw JSON body (`{"timestamp":…,"message":…}`).
+  Errors now show the API's `message`, and validation errors name the field.
+- The role used to show or hide edit controls was decoded from the token on
+  each render: it ignored expiry and didn't update on login or logout. The
+  session is now a small store that updates every component, across tabs.
+- Three hand-written form modals (player, article, history) and repeated
+  position lists became one form built from `admin/resources.js`, shared by
+  the public pages and the dashboard. The form is lazy-loaded, so visitors
+  never download it.
+- Seasons were hard-coded and disagreed with each other (navbar "2026/27",
+  league table "2025/26"). They now come from the API.
 - `ordinal()` produced "11st", "21th", and "nullth" when there was no
   position. Fixed and tested.
-- Season ("2024/25") and competition filters were hard-coded; they now
-  come from the API.
-- Create React App (deprecated) was replaced by Vite, and the admin panel is
-  code-split.
+- Unknown URLs silently redirected home; there is now a "Page not found"
+  page.
+- The Vite config still carried Create React App bridges (`process.env`
+  defines, `.js` files parsed as JSX). It is now a plain Vite setup.
+- Club name, colours, YouTube channel and sport-specific wording are now
+  configuration instead of being spread through the components.
 
 **API**
 - `GET /news/{slug}` returned **unpublished drafts** to anyone. It now

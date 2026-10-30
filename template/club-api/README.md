@@ -6,8 +6,8 @@ image uploads, YouTube videos, and a role-based admin API.
 
 It was extracted from the Denny Warriors FC API, with everything
 club-specific moved into configuration. Its frontend counterpart is
-**club-web** (React), which lives in the website repository's
-`template/club-web` folder and is built against the API contract below.
+**club-web** (React), which lives in the `DennyWarriorsFootballClub`
+repository's `template/club-web` folder and is built against the API contract below.
 
 - Java 17, Spring Boot 3.5, Spring Security, Spring Data MongoDB
 - Stateless JWT auth (access + refresh tokens), BCrypt, login rate limiting
@@ -91,7 +91,7 @@ the full list.
 | `CLUB_NAME` | `Example FC` | Must match the league data's spelling (case-insensitive) |
 | `CLUB_TIMEZONE` | `Europe/London` | Kick-off times are shown in this zone |
 | `POINTS_FOR_WIN` / `_DRAW` / `_LOSS` | `3` / `1` / `0` | Season stats; change for other sports |
-| `ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated frontend origins (CORS) |
+| `ALLOWED_ORIGINS` | `http://localhost:3000` | Comma-separated frontend origins (CORS) |
 | `LEAGUE_PROVIDER` | `manual` | `manual` or `comet` |
 | `COMET_FIXTURES_URL` / `COMET_STANDINGS_URL` | | Only for `comet`; include the API key |
 | `YOUTUBE_CHANNEL_ID` | blank (off) | Channel id starting `UC` |

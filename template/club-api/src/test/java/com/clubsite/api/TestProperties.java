@@ -26,7 +26,7 @@ public final class TestProperties {
                 CLUB,
                 ZoneId.of("Europe/London"),
                 scoring,
-                new ClubProperties.Security(List.of("http://localhost:5173"), jwt(), true),
+                new ClubProperties.Security(List.of("http://localhost:3000"), jwt(), true),
                 new ClubProperties.Admin(false, "admin", null),
                 new ClubProperties.Media(DataSize.ofMegabytes(5), Set.of("image/jpeg", "image/png", "image/webp", "image/gif")),
                 new ClubProperties.League("manual", false, Duration.ofSeconds(10), Duration.ofDays(1), Duration.ofDays(1),

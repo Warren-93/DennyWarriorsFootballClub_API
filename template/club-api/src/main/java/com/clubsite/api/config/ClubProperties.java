@@ -47,7 +47,7 @@ public record ClubProperties(
     }
 
     public record Security(
-            @DefaultValue("http://localhost:5173") List<String> allowedOrigins,
+            @DefaultValue("http://localhost:3000") List<String> allowedOrigins,
             @Valid @DefaultValue Jwt jwt,
             @DefaultValue("true") boolean loginRateLimitEnabled) {
     }
