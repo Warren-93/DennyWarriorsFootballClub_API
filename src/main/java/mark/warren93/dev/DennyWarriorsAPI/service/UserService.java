@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.dto.CreateUserRequest;
 import mark.warren93.dev.DennyWarriorsAPI.dto.UserSummary;
 import mark.warren93.dev.DennyWarriorsAPI.exception.InvalidUserOperationException;
@@ -14,15 +15,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     public List<UserSummary> listUsers() {
         return userRepository.findAll().stream().map(UserSummary::from).toList();

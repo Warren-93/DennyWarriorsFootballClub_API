@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.config.ClubConfig;
 import mark.warren93.dev.DennyWarriorsAPI.dto.SeasonStatsResponse;
 import mark.warren93.dev.DennyWarriorsAPI.model.Fixture;
@@ -19,20 +20,12 @@ import java.util.Optional;
  * combined with the club's current standings position.
  */
 @Service
+@RequiredArgsConstructor
 public class StatsService {
 
     private final FixtureRepository fixtureRepository;
     private final StandingsRowRepository standingsRowRepository;
     private final ClubConfig clubConfig;
-
-    public StatsService(
-            FixtureRepository fixtureRepository,
-            StandingsRowRepository standingsRowRepository,
-            ClubConfig clubConfig) {
-        this.fixtureRepository = fixtureRepository;
-        this.standingsRowRepository = standingsRowRepository;
-        this.clubConfig = clubConfig;
-    }
 
     public SeasonStatsResponse getSeasonStats() {
         String clubName = clubConfig.getName();

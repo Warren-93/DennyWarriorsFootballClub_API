@@ -1,6 +1,8 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import mark.warren93.dev.DennyWarriorsAPI.exception.InvalidSyncSettingsException;
 import mark.warren93.dev.DennyWarriorsAPI.model.Fixture;
 import mark.warren93.dev.DennyWarriorsAPI.model.MatchResult;
@@ -11,8 +13,6 @@ import mark.warren93.dev.DennyWarriorsAPI.repository.FixtureRepository;
 import mark.warren93.dev.DennyWarriorsAPI.repository.StandingsRowRepository;
 import mark.warren93.dev.DennyWarriorsAPI.repository.SyncLogRepository;
 import mark.warren93.dev.DennyWarriorsAPI.repository.SyncSettingsRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.Trigger;
@@ -34,9 +34,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * no restart needed.
  */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class SyncService {
 
-    private static final Logger log = LoggerFactory.getLogger(SyncService.class);
     private static final int MAX_ATTEMPTS = 3;
     private static final long BACKOFF_BASE_MS = 500;
     // League data (fixtures/tables) only changes weekly, so 1 day is the floor — no
@@ -64,23 +65,6 @@ public class SyncService {
 
     @Value("${league.sync.interval-ms:900000}")
     private long defaultIntervalMs;
-
-    public SyncService(
-            LeagueApiClient leagueApiClient,
-            LeagueDataMapper mapper,
-            FixtureRepository fixtureRepository,
-            StandingsRowRepository standingsRowRepository,
-            SyncLogRepository syncLogRepository,
-            SyncSettingsRepository syncSettingsRepository,
-            TaskScheduler taskScheduler) {
-        this.leagueApiClient = leagueApiClient;
-        this.mapper = mapper;
-        this.fixtureRepository = fixtureRepository;
-        this.standingsRowRepository = standingsRowRepository;
-        this.syncLogRepository = syncLogRepository;
-        this.syncSettingsRepository = syncSettingsRepository;
-        this.taskScheduler = taskScheduler;
-    }
 
     @PostConstruct
     void init() {

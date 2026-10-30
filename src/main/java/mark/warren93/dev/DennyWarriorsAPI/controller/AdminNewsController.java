@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
 import mark.warren93.dev.DennyWarriorsAPI.model.NewsArticle;
 import mark.warren93.dev.DennyWarriorsAPI.service.NewsService;
@@ -16,13 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/admin/news")
+@RequiredArgsConstructor
 public class AdminNewsController {
 
     private final NewsService newsService;
-
-    public AdminNewsController(NewsService newsService) {
-        this.newsService = newsService;
-    }
 
     /** Unlike the public listing, this sees drafts too — for the admin's own editor list. */
     @GetMapping

@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.dto.YouTubeVideo;
 import mark.warren93.dev.DennyWarriorsAPI.model.MediaAsset;
 import mark.warren93.dev.DennyWarriorsAPI.service.MediaService;
@@ -16,15 +17,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/media")
+@RequiredArgsConstructor
 public class MediaController {
 
     private final MediaService mediaService;
     private final YouTubeFeedService youTubeFeedService;
-
-    public MediaController(MediaService mediaService, YouTubeFeedService youTubeFeedService) {
-        this.mediaService = mediaService;
-        this.youTubeFeedService = youTubeFeedService;
-    }
 
     @GetMapping("/videos")
     public List<YouTubeVideo> getVideos() {

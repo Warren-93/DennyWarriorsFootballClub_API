@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.config.ClubConfig;
 import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
 import mark.warren93.dev.DennyWarriorsAPI.dto.LeagueTableRowResponse;
@@ -13,15 +14,11 @@ import java.util.Comparator;
 
 @RestController
 @RequestMapping("/api/v1/standings")
+@RequiredArgsConstructor
 public class StandingsController {
 
     private final StandingsRowRepository standingsRowRepository;
     private final ClubConfig clubConfig;
-
-    public StandingsController(StandingsRowRepository standingsRowRepository, ClubConfig clubConfig) {
-        this.standingsRowRepository = standingsRowRepository;
-        this.clubConfig = clubConfig;
-    }
 
     @GetMapping
     public ApiListResponse<LeagueTableRowResponse> getStandings() {

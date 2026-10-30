@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.dto.MediaUploadResponse;
 import mark.warren93.dev.DennyWarriorsAPI.service.MediaService;
 import org.springframework.http.HttpStatus;
@@ -12,13 +13,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/v1/admin/media")
+@RequiredArgsConstructor
 public class AdminMediaController {
 
     private final MediaService mediaService;
-
-    public AdminMediaController(MediaService mediaService) {
-        this.mediaService = mediaService;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.exception.ResourceNotFoundException;
 import mark.warren93.dev.DennyWarriorsAPI.model.HistoryEntry;
 import mark.warren93.dev.DennyWarriorsAPI.model.HistoryEntryType;
@@ -11,13 +12,10 @@ import java.util.Comparator;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class HistoryService {
 
     private final HistoryEntryRepository historyEntryRepository;
-
-    public HistoryService(HistoryEntryRepository historyEntryRepository) {
-        this.historyEntryRepository = historyEntryRepository;
-    }
 
     public List<HistoryEntry> getEntries(HistoryEntryType type) {
         return historyEntryRepository.findAll().stream()

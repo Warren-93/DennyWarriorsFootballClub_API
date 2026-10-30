@@ -72,14 +72,16 @@ class SyncServiceTest {
     @Test
     void successfulSyncUpsertsFixturesAndReplacesStandingsAndLogsSuccess() {
         when(leagueApiClient.fetchMatches()).thenReturn(List.of(playedMatch(1), playedMatch(2)));
-        when(leagueApiClient.fetchStandings()).thenReturn(List.of(row(1)));
+        List<StandingsRow> standings = List.of(row(1));
+        when(leagueApiClient.fetchStandings()).thenReturn(standings);
         when(fixtureRepository.findByLeagueFixtureId(any())).thenReturn(Optional.empty());
 
         SyncLog result = syncService.sync(SyncService.TRIGGER_MANUAL);
 
         verify(fixtureRepository, times(2)).save(any(Fixture.class));
         verify(standingsRowRepository).deleteAll();
-        verify(standingsRowRepository).saveAll(List.of(row(1)));
+        // Documents compare by identity (no @Data), so check the same rows were saved.
+        verify(standingsRowRepository).saveAll(standings);
         assertThat(result.getStatus()).isEqualTo("SUCCESS");
         assertThat(result.getRecordsProcessed()).isEqualTo(2);
         assertThat(result.getRecordsUpserted()).isEqualTo(2);

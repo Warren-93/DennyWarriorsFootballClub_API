@@ -1,8 +1,9 @@
 package mark.warren93.dev.DennyWarriorsAPI.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,9 +14,10 @@ import java.time.Instant;
  * interval, so it survives restarts and can be changed from the admin panel
  * without a redeploy.
  */
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
-@AllArgsConstructor
+@ToString
 @Document(collection = "sync_settings")
 public class SyncSettings {
 
