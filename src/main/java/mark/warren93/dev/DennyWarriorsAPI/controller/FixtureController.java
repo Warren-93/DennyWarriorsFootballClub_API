@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.config.ClubConfig;
 import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
 import mark.warren93.dev.DennyWarriorsAPI.dto.FixtureResponse;
@@ -15,15 +16,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/fixtures")
+@RequiredArgsConstructor
 public class FixtureController {
 
     private final FixtureService fixtureService;
     private final ClubConfig clubConfig;
-
-    public FixtureController(FixtureService fixtureService, ClubConfig clubConfig) {
-        this.fixtureService = fixtureService;
-        this.clubConfig = clubConfig;
-    }
 
     @GetMapping
     public ApiListResponse<FixtureResponse> getFixtures(

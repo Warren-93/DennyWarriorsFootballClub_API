@@ -1,9 +1,9 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import mark.warren93.dev.DennyWarriorsAPI.config.YouTubeConfig;
 import mark.warren93.dev.DennyWarriorsAPI.dto.YouTubeVideo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.w3c.dom.Document;
@@ -30,9 +30,10 @@ import java.util.List;
  * served instead — see CACHE_TTL).
  */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class YouTubeFeedService {
 
-    private static final Logger log = LoggerFactory.getLogger(YouTubeFeedService.class);
     private static final Duration CACHE_TTL = Duration.ofMinutes(30);
     private static final String FEED_URL = "https://www.youtube.com/feeds/videos.xml?channel_id=";
 
@@ -41,11 +42,6 @@ public class YouTubeFeedService {
 
     private volatile List<YouTubeVideo> cached = List.of();
     private volatile Instant cachedAt = Instant.EPOCH;
-
-    public YouTubeFeedService(WebClient webClient, YouTubeConfig youTubeConfig) {
-        this.webClient = webClient;
-        this.youTubeConfig = youTubeConfig;
-    }
 
     public List<YouTubeVideo> getVideos() {
         if (Duration.between(cachedAt, Instant.now()).compareTo(CACHE_TTL) < 0) {

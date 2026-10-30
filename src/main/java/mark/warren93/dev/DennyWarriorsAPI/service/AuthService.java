@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.dto.LoginRequest;
 import mark.warren93.dev.DennyWarriorsAPI.dto.LoginResponse;
 import mark.warren93.dev.DennyWarriorsAPI.dto.TokenResponse;
@@ -12,23 +13,13 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final LoginRateLimiter loginRateLimiter;
-
-    public AuthService(
-            UserRepository userRepository,
-            JwtService jwtService,
-            PasswordEncoder passwordEncoder,
-            LoginRateLimiter loginRateLimiter) {
-        this.userRepository = userRepository;
-        this.jwtService = jwtService;
-        this.passwordEncoder = passwordEncoder;
-        this.loginRateLimiter = loginRateLimiter;
-    }
 
     public LoginResponse login(LoginRequest request) {
         loginRateLimiter.checkAllowed(request.username());

@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.model.HistoryEntry;
 import mark.warren93.dev.DennyWarriorsAPI.service.HistoryService;
 import org.springframework.http.HttpStatus;
@@ -14,13 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/admin/history")
+@RequiredArgsConstructor
 public class AdminHistoryController {
 
     private final HistoryService historyService;
-
-    public AdminHistoryController(HistoryService historyService) {
-        this.historyService = historyService;
-    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

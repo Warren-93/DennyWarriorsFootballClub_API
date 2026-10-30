@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.exception.InvalidMediaException;
 import mark.warren93.dev.DennyWarriorsAPI.exception.ResourceNotFoundException;
 import mark.warren93.dev.DennyWarriorsAPI.model.MediaAsset;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class MediaService {
 
     private static final Set<String> ALLOWED_CONTENT_TYPES =
@@ -19,10 +21,6 @@ public class MediaService {
     private static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024; // 5MB
 
     private final MediaAssetRepository mediaAssetRepository;
-
-    public MediaService(MediaAssetRepository mediaAssetRepository) {
-        this.mediaAssetRepository = mediaAssetRepository;
-    }
 
     public MediaAsset upload(MultipartFile file) {
         if (file == null || file.isEmpty()) {

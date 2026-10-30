@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
 import mark.warren93.dev.DennyWarriorsAPI.dto.NewsArticleResponse;
 import mark.warren93.dev.DennyWarriorsAPI.service.NewsService;
@@ -11,13 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/news")
+@RequiredArgsConstructor
 public class NewsController {
 
     private final NewsService newsService;
-
-    public NewsController(NewsService newsService) {
-        this.newsService = newsService;
-    }
 
     @GetMapping
     public ApiListResponse<NewsArticleResponse> getNews(

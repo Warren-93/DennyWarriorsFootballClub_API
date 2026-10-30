@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.exception.ResourceNotFoundException;
 import mark.warren93.dev.DennyWarriorsAPI.model.Fixture;
 import mark.warren93.dev.DennyWarriorsAPI.repository.FixtureRepository;
@@ -13,13 +14,10 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class FixtureService {
 
     private final FixtureRepository fixtureRepository;
-
-    public FixtureService(FixtureRepository fixtureRepository) {
-        this.fixtureRepository = fixtureRepository;
-    }
 
     public List<Fixture> getFixtures(String season, String competition, String status, Integer limit) {
         Stream<Fixture> stream = fixtureRepository.findAll().stream()

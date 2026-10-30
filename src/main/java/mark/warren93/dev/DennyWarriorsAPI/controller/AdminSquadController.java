@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
 import mark.warren93.dev.DennyWarriorsAPI.model.Player;
 import mark.warren93.dev.DennyWarriorsAPI.service.SquadService;
@@ -16,13 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/admin/squad")
+@RequiredArgsConstructor
 public class AdminSquadController {
 
     private final SquadService squadService;
-
-    public AdminSquadController(SquadService squadService) {
-        this.squadService = squadService;
-    }
 
     /** Raw model fields (not the public PlayerResponse aliases) — for the admin editor form. */
     @GetMapping

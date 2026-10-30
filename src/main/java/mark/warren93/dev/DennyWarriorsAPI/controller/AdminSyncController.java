@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.controller;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.dto.ApiListResponse;
 import mark.warren93.dev.DennyWarriorsAPI.dto.SyncSettingsResponse;
 import mark.warren93.dev.DennyWarriorsAPI.dto.UpdateSyncSettingsRequest;
@@ -17,15 +18,11 @@ import java.util.Comparator;
 
 @RestController
 @RequestMapping("/api/v1/admin/sync")
+@RequiredArgsConstructor
 public class AdminSyncController {
 
     private final SyncService syncService;
     private final SyncLogRepository syncLogRepository;
-
-    public AdminSyncController(SyncService syncService, SyncLogRepository syncLogRepository) {
-        this.syncService = syncService;
-        this.syncLogRepository = syncLogRepository;
-    }
 
     @PostMapping("/trigger")
     public SyncLog triggerSync() {

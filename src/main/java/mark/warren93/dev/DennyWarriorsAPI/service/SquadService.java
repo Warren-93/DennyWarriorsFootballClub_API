@@ -1,5 +1,6 @@
 package mark.warren93.dev.DennyWarriorsAPI.service;
 
+import lombok.RequiredArgsConstructor;
 import mark.warren93.dev.DennyWarriorsAPI.exception.ResourceNotFoundException;
 import mark.warren93.dev.DennyWarriorsAPI.model.Player;
 import mark.warren93.dev.DennyWarriorsAPI.repository.PlayerRepository;
@@ -12,13 +13,10 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 @Service
+@RequiredArgsConstructor
 public class SquadService {
 
     private final PlayerRepository playerRepository;
-
-    public SquadService(PlayerRepository playerRepository) {
-        this.playerRepository = playerRepository;
-    }
 
     public List<Player> getSquad(Integer limit, String position) {
 

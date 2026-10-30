@@ -1,6 +1,7 @@
 package mark.warren93.dev.DennyWarriorsAPI.config;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,7 +12,8 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @ConfigurationProperties(prefix = "dwfc.club")
-@Data
+@Getter
+@Setter
 public class ClubConfig {
     private String name;
 }
